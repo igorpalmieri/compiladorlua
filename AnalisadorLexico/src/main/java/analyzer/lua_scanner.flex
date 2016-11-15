@@ -18,10 +18,10 @@ import java_cup.runtime.Symbol;
 %column
 
 
+BINOP = "<"|"+"
 NUMBER = (-)?([0-9]*\.)?[0-9]+
-VALUE = nil|true|false
-BINOP = "<"
-UNOP = \-|not|#
+VALUE = "nil"|"true"|"false"
+UNOP = "-"|"not"|"#"
 NAME = [_|a-z|A-Z][a-z|A-Z|0-9|_]*
 STRING = \"([^\"]*)?\"
 COMMENT = "--"(.[^\n]*)?
