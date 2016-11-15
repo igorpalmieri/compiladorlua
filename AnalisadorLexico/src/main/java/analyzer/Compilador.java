@@ -1,16 +1,35 @@
 package analyzer;
 
 import java.io.FileReader;
+import java.nio.file.Paths;
+
+import java_cup.runtime.Symbol;
 
 public class Compilador {
 
 	public static void main(String[] args) throws Exception{
-		String sourceCode = "C:/Users/Igor-Surface/workspace/AnalisadorLexico/src/main/java/analyzer/example.lua";
+		String sourceCode = Paths.get("").toAbsolutePath()+"/src/main/java/analyzer/example.lua";
 
 		AnalisadorLexico al = new AnalisadorLexico(new FileReader(sourceCode));
+		Symbol s;
+		while((s = al.next_token()).sym != sym.EOF){
+			System.out.println(((LUAToken)s.value).type + " = " + ((LUAToken)s.value).value);
+		}
 		AnalisadorSintatico as = new AnalisadorSintatico(al);
 		
 		Node root = (Node) as.parse().value;
-		System.out.println(root.value);
+		
+		printTree(root,"");
+	}
+	
+	public static void printTree(Node n,String k){
+		if(n.type == "Terminal")
+			System.out.println(k+" "+n.token.value);
+		else
+			System.out.println(k+" "+n.type);
+		k = k + "-";
+		if(n.list != null)
+			for(Node no : n.list)				
+				printTree(no,k);
 	}
 }

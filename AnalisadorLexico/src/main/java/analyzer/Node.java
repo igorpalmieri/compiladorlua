@@ -1,19 +1,17 @@
 package analyzer;
 
 public class Node {
-    public String value;
-    public int type;
-    Node left, right;
+    Node[] list;
+    LUAToken token;
+    String type;
     
-    public Node(String value, int type, Node left, Node right){
-    	this.value = value;
+    public Node(String type, Node[] list){
     	this.type = type;
-    	this.left = left;
-    	this.right = right;
+    	this.list = list;
     }
-    public Node(String value, int type){
-    	this.value = value;
-    	this.type = type;
+    public Node(LUAToken token){
+    	this.token = token;
+    	this.type = "Terminal";
     }
 }
 

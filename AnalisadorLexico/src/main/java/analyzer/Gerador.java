@@ -15,10 +15,10 @@ import java_cup.runtime.*;
 public class Gerador {
 	
 	public static void main(String[] args) throws FileNotFoundException{
-		File f = new File("C:/Users/Igor-Surface/workspace/AnalisadorLexico/src/main/java/analyzer/lua_scanner.flex");
+		File f = new File(Paths.get("").toAbsolutePath()+"/src/main/java/analyzer/lua_scanner.flex");
 		jflex.Main.generate(f);
 		
-		String[] s = {"-parser","AnalisadorSintatico","-expect","5","C:/Users/Igor-Surface/workspace/AnalisadorLexico/src/main/java/analyzer/lua_parser.cup"};
+		String[] s = {"-parser","AnalisadorSintatico","-expect","5",Paths.get("").toAbsolutePath()+"/src/main/java/analyzer/lua_parser.cup"};
 		try {
 			java_cup.Main.main(s);
 			moverArch("AnalisadorSintatico.java");

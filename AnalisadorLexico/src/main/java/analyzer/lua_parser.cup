@@ -2,7 +2,6 @@ package analyzer;
 
 import java_cup.runtime.*;
 
-
 parser code {:
 
     public void report_error(String message, Object info)  {
@@ -15,7 +14,7 @@ parser code {:
     }
 
 	public void syntax_error(Symbol cur_token) {
-		System.out.println("Syntax Error - " + cur_token);
+		System.out.println("Syntax Error - " + ((LUAToken)cur_token.value).value);
 	}
 :};
 
@@ -28,56 +27,109 @@ terminal LUAToken DO,END,WHILE,REPEAT,UNTIL,IF,THEN,ELSEIF,ELSE,FOR,IN,FUNCTION,
 non terminal Node chunk, stat, laststat, block, varlist, explist, functioncall;
 non terminal Node exp, namelist, function, funcname, funcbody, var, prefixexp;
 non terminal Node tableconstructor, args, parlist, fieldlist, field, fieldsep;
+non terminal Node elseif,funcname2,varlist2,fieldlist2,namelist2,explist2;
 
 start with chunk;
 
-chunk ::=  stat:s PVIRGULA:t {: RESULT = new Node(t.value,t.start,s,null); :}
-		| stat:s1 PVIRGULA:t chunk:s2 {: RESULT = new Node(t.value,t.start,s1,s2); :}
-		| stat PVIRGULA laststat PVIRGULA;
+chunk ::=  stat:n PVIRGULA:t {: Node[] k = {n,new Node(t)}; RESULT = new Node("chunk",k); :}
+		| stat:n1 PVIRGULA:t chunk:n2 {: Node[] k = {n1,new Node(t),n2}; RESULT = new Node("chunk",k); :}
+		| stat:n1 PVIRGULA:t1 laststat:n2 PVIRGULA:t2 {: Node[] k = {n1,new Node(t1),n2,new Node(t2)}; RESULT = new Node("chunk",k); :};
 
-block ::= chunk;
+block ::= chunk:n {: Node[] k = {n}; RESULT = new Node("block",k); :};
 
-stat ::=  varlist:n1 ATRIBUICAO:t explist:n2 {: RESULT = new Node(t.value,t.start,n1,n2); :} | 
-	      functioncall | DO block END | 
-		  WHILE exp DO block END | REPEAT block UNTIL exp |
-		  IF exp THEN block ACHA ELSEIF exp THEN block FCHA ELSE block END |
-		  FOR NAME ATRIBUICAO exp VIRGULA exp VIRGULA exp DO block END |
-		  FOR namelist IN explist DO block END |
-		  FUNCTION funcname funcbody | LOCAL FUNCTION NAME funcbody |
-		  LOCAL namelist ATRIBUICAO explist;
-		  
-laststat ::= RETURN explist | BREAK;
+stat ::=  varlist:n1 ATRIBUICAO:t explist:n2 {: Node[] k = {n1,new Node(t),n2}; RESULT = new Node("stat",k); :} 
+        | functioncall:n {: RESULT = n; :}  
+        | DO:t1 block:n END:t2 {: Node[] k = {new Node(t1),n,new Node(t2)}; RESULT = new Node("stat",k); :} 
+        | WHILE:t1 exp:n1 DO:t2 block:n2 END:t3 {: Node[] k = {new Node(t1),n1,new Node(t2),n2,new Node(t3)}; RESULT = new Node("stat",k); :}
+        | REPEAT:t1 block:n1 UNTIL:t2 exp:n2 {: Node[] k = {new Node(t1),n1,new Node(t2),n2}; RESULT = new Node("stat",k); :}
+        | IF:t1 exp:n1 THEN:t2 block:n2 END:t3 {: Node[] k = {new Node(t1),n1,new Node(t2),n2,new Node(t3)}; RESULT = new Node("stat",k); :} 
+        | IF:t1 exp:n1 THEN:t2 block:n2 elseif:n3 END:t3 {: Node[] k = {new Node(t1),n1,new Node(t2),n2,n3,new Node(t3)}; RESULT = new Node("stat",k); :}
+        | IF:t1 exp:n1 THEN:t2 block:n2 elseif:n3 ELSE:t3 block:n4 END:t4 {: Node[] k = {new Node(t1),n1,new Node(t2),n2,n3,new Node(t3),n4,new Node(t4)}; RESULT = new Node("stat",k); :}
+        | FOR:t1 NAME:t2 ATRIBUICAO:t3 exp:n1 VIRGULA:t4 exp:n2 DO:t5 block:n3 END:t6 {: Node[] k = {new Node(t1),new Node(t2),new Node(t3),n1,new Node(t4),n2,new Node(t5),n3,new Node(t6)}; RESULT = new Node("stat",k); :}
+        | FOR:t1 NAME:t2 ATRIBUICAO:t3 exp:n1 VIRGULA:t4 exp:n2 VIRGULA:t5 exp:n3 DO:t6 block:n4 END:t7 {: Node[] k = {new Node(t1),new Node(t2),new Node(t3),n1,new Node(t4),n2,new Node(t5),n3,new Node(t6),n4,new Node(t7)}; RESULT = new Node("stat",k); :}
+        | FOR:t1 namelist:n1 IN:t2 explist:n2 DO:t3 block:n3 END:t4 {: Node[] k = {new Node(t1),n1,new Node(t2),n2,new Node(t3),n3, new Node(t4)}; RESULT = new Node("stat",k); :}
+        | FUNCTION:t1 funcname:n1 funcbody:n2 {: Node[] k = {new Node(t1),n1,n2}; RESULT = new Node("stat",k); :}
+        | LOCAL:t1 FUNCTION:t2 NAME:t3 funcbody:n1 {: Node[] k = {new Node(t1),new Node(t2),new Node(t3),n1}; RESULT = new Node("stat",k); :}
+        | LOCAL:t1 namelist:n1 {: Node[] k = {new Node(t1),n1}; RESULT = new Node("stat",k); :}
+        | LOCAL:t1 namelist:n1 ATRIBUICAO:t2 explist:n2 {: Node[] k = {new Node(t1),n1,new Node(t2),n2}; RESULT = new Node("stat",k); :};
+        
 
-funcname ::= NAME ACHA PONTO NAME FCHA DPONTOS NAME;
+elseif ::= ELSEIF:t1 exp:n1 THEN:t2 block:n2 {: Node[] k = {new Node(t1),n1,new Node(t2),n2}; RESULT = new Node("elseif",k); :}
+		 | ELSEIF:t1 exp:n1 THEN:t2 block:n2 elseif:n3 {: Node[] k = {new Node(t1),n1,new Node(t2),n2,n3}; RESULT = new Node("elseif",k); :};
+	  
+laststat ::= RETURN:t1 explist:n1 {: Node[] k = {new Node(t1),n1}; RESULT = new Node("laststat",k); :} 
+		   | BREAK:t1 {: Node[] k = {new Node(t1)}; RESULT = new Node("laststat",k); :};
 
-varlist ::= var:n {: RESULT = n; :} | var VIRGULA varlist;
+funcname ::= NAME:t1 {: Node[] k = {new Node(t1)}; RESULT = new Node("funcname",k); :} 
+		   | NAME:t1 funcname2:n1 {: Node[] k = {new Node(t1),n1}; RESULT = new Node("funcname",k); :} 
+		   | NAME:t1 funcname2:n1 DPONTOS:t2 NAME:t3 {: Node[] k = {new Node(t1),n1,new Node(t2),new Node(t3)}; RESULT = new Node("funcname",k); :};
 
-var ::= NAME:t {: RESULT = new Node(t.value,t.start); :} | prefixexp ACOL exp FCOL | prefixexp PONTO NAME;
+funcname2 ::= PONTO:t1 NAME:t2 {: Node[] k = {new Node(t1),new Node(t2)}; RESULT = new Node("funcname2",k); :} 
+			| PONTO:t1 NAME:t2 funcname2:n1 {: Node[] k = {new Node(t1),new Node(t2),n1}; RESULT = new Node("laststat",k); :};
 
-namelist ::= NAME ACHA VIRGULA NAME FCHA;
+varlist ::= var:n {: RESULT = n; :} 
+          | var:n1 varlist2:n2 {: Node[] k = {n1,n2}; RESULT = new Node("varlist",k); :} ;
 
-explist ::= exp:n {: RESULT = n; :} | exp VIRGULA explist;
+varlist2 ::= VIRGULA:t1 var:n1 {: Node[] k = {new Node(t1),n1}; RESULT = new Node("varlist2",k); :}
+		   | VIRGULA:t1 varlist2:n1 {: Node[] k = {new Node(t1),n1}; RESULT = new Node("varlist2",k); :} ;
 
-exp ::= VALUE | NUMBER:t {: RESULT = new Node(t.value,t.start); :} | STRING | TPONTOS | function | prefixexp |
-		tableconstructor | exp BINOP exp | UNOP exp;
+var ::= NAME:t {: RESULT = new Node(t); :} 
+      | prefixexp:n1 ACOL:t1 exp:n2 FCOL:t2 {: Node[] k = {n1,new Node(t1),n2,new Node(t2)}; RESULT = new Node("var",k); :}  
+      | prefixexp:n1 PONTO:t1 NAME:t2 {: Node[] k = {n1,new Node(t1),new Node(t2)}; RESULT = new Node("var",k); :}  ;
+
+namelist ::= NAME:t1 {: RESULT = new Node(t1); :} 
+           | NAME:t1 varlist2:n1 {: Node[] k = {new Node(t1),n1}; RESULT = new Node("namelist",k); :} ;
+
+namelist2 ::= VIRGULA:t1 NAME:t2 {: Node[] k = {new Node(t1),new Node(t2)}; RESULT = new Node("namelist2",k); :}
+		    | VIRGULA:t1 namelist2:n1 {: Node[] k = {new Node(t1),n1}; RESULT = new Node("namelist2",k); :} ;
+
+explist ::= exp:n {: RESULT = n; :} 
+          | exp:n1 explist2:n2 {: Node[] k = {n1,n2}; RESULT = new Node("explist",k); :} ;
+
+explist2 ::= VIRGULA:t1 exp:n1 {: Node[] k = {new Node(t1),n1}; RESULT = new Node("explist2",k); :}
+		   | VIRGULA:t1 explist2:n1 {: Node[] k = {new Node(t1),n1}; RESULT = new Node("explist2",k); :} ;
+
+exp ::= VALUE:t1 {: RESULT = new Node(t1); :}  
+      | NUMBER:t1 {: RESULT = new Node(t1); :} 
+      | STRING:t1 {: RESULT = new Node(t1); :}  
+      | TPONTOS:t1 {: RESULT = new Node(t1); :}  
+      | function:n1 {: RESULT = n1; :}  
+      | prefixexp:n1 {: RESULT = n1; :}  
+      | tableconstructor:n1 {: RESULT = n1; :}  
+      | exp:n1 BINOP:t1 exp:n2 {: Node[] k = {n1,new Node(t1),n2}; RESULT = new Node("exp",k); :}
+      | UNOP:t1 exp:n1 {: Node[] k = {new Node(t1),n1}; RESULT = new Node("exp",k); :};
 		
-prefixexp ::= var | functioncall | APAR exp FPAR;
+prefixexp ::= var:n1 {: RESULT = n1; :}   
+            | functioncall:n1 {: RESULT = n1; :}   
+            | APAR:t1 exp:n1 FPAR:t2 {: Node[] k = {new Node(t1),n1,new Node(t2)}; RESULT = new Node("prefixexp",k); :};
 
-functioncall ::= prefixexp args | prefixexp DPONTOS NAME args;
+functioncall ::= prefixexp:n1 args:n2  {: Node[] k = {n1,n2}; RESULT = new Node("functioncall",k); :}
+               | prefixexp:n1 DPONTOS:t1 NAME:t2 args:n2  {: Node[] k = {n1,new Node(t1),new Node(t2),n2}; RESULT = new Node("functioncall",k); :};
 
-args ::= APAR explist FPAR | tableconstructor | STRING;
+args ::= APAR:t1 explist:n1 FPAR:t2 {: Node[] k = {new Node(t1),n1,new Node(t2)}; RESULT = new Node("args",k); :}
+       | tableconstructor:n1 {: RESULT = n1; :}  
+       | STRING:t1 {: RESULT = new Node(t1); :} ;
 
-function ::= FUNCTION funcbody;
+function ::= FUNCTION:t1 funcbody:n1 {: Node[] k = {new Node(t1),n1}; RESULT = new Node("function",k); :};
 
-funcbody ::= APAR parlist FPAR block END;
+funcbody ::= APAR:t1 parlist:n1 FPAR:t2 block:n2 END:t3 {: Node[] k = {new Node(t1),n1,new Node(t2),n2,new Node(t3)}; RESULT = new Node("funcbody",k); :};
 
-parlist ::= namelist VIRGULA TPONTOS | TPONTOS;
+parlist ::= namelist:n1 {: RESULT = n1; :} 
+		  | namelist:n1 VIRGULA:t1 TPONTOS:t2 {: Node[] k = {n1,new Node(t1),new Node(t2)}; RESULT = new Node("parlist",k); :}
+		  | TPONTOS:t1 {: RESULT = new Node(t1); :} ;
 
-tableconstructor ::= ACHA fieldlist FCHA;
+tableconstructor ::= ACHA:t1 fieldlist:n1 FCHA:t2 {: Node[] k = {new Node(t1),n1,new Node(t2)}; RESULT = new Node("tableconstructor",k); :};
 
-fieldlist ::= field ACHA fieldsep field FCHA;
+fieldlist ::= field:n1 fieldlist2:n2 {: Node[] k = {n1,n2}; RESULT = new Node("fieldlist",k); :}
+            | field:n1 fieldlist2:n2 fieldsep:n3 {: Node[] k = {n1,n2,n3}; RESULT = new Node("fieldlist",k); :};
 
-field ::= ACOL exp FCOL ATRIBUICAO exp | NAME ATRIBUICAO exp | exp;
+fieldlist2 ::= fieldsep:n1 field:n2 {: Node[] k = {n1,n2}; RESULT = new Node("fieldlist2",k); :}
+             | fieldsep:n1 field:n2 fieldlist2:n3 {: Node[] k = {n1,n2,n3}; RESULT = new Node("fieldlist2",k); :};
 
-fieldsep ::= VIRGULA | PVIRGULA;
+field ::= ACOL:t1 exp:n1 FCOL:t2 ATRIBUICAO:t3 exp:n2 {: Node[] k = {new Node(t1),n1,new Node(t2),new Node(t3),n2}; RESULT = new Node("field",k); :} 
+        | NAME:t1 ATRIBUICAO:t2 exp:n1 {: Node[] k = {new Node(t1),new Node(t2),n1}; RESULT = new Node("field",k); :}
+        | exp:n1 {: RESULT = n1; :}  ;
+
+fieldsep ::= VIRGULA:t1 {: RESULT = new Node(t1); :} 
+           | PVIRGULA:t1 {: RESULT = new Node(t1); :} ;
 

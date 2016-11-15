@@ -18,13 +18,13 @@ import java_cup.runtime.Symbol;
 %column
 
 
-NUMBER = ([0-9]*\.)?[0-9]+
-VALUE = "nil"
+NUMBER = (-)?([0-9]*\.)?[0-9]+
+VALUE = nil|true|false
+BINOP = "<"
+UNOP = \-|not|#
 NAME = [_|a-z|A-Z][a-z|A-Z|0-9|_]*
 STRING = \"([^\"]*)?\"
 COMMENT = "--"(.[^\n]*)?
-BINOP = ["+"|"-"|"*"|"/"|"^"|"%"|".."|"<"|"<="|">"|">="|"=="|"~="|"and"|"or"]
-UNOP = ["-"|"not"|"#"]
 BRANCO = [\n| |\t|\r]
 
 %%
@@ -56,11 +56,11 @@ BRANCO = [\n| |\t|\r]
 ":"	 			 { return new Symbol(sym.DPONTOS, createToken(sym.DPONTOS, yytext(), yycolumn)); }
 "..."	 		 { return new Symbol(sym.TPONTOS, createToken(sym.TPONTOS, yytext(), yycolumn)); }
 "="				 { return new Symbol(sym.ATRIBUICAO, createToken(sym.ATRIBUICAO, yytext(), yycolumn)); }
+{BINOP}			 { return new Symbol(sym.BINOP, createToken(sym.BINOP, yytext(), yycolumn)); }
 {VALUE}			 { return new Symbol(sym.VALUE, createToken(sym.VALUE, yytext(), yycolumn)); }
 {NAME}  		 { return new Symbol(sym.NAME, createToken(sym.NAME, yytext(), yycolumn)); }
 {NUMBER}         { return new Symbol(sym.NUMBER, createToken(sym.NUMBER, yytext(), yycolumn)); }
 {STRING} 		 { return new Symbol(sym.STRING, createToken(sym.STRING, yytext(), yycolumn)); }
-{BINOP}			 { return new Symbol(sym.BINOP, createToken(sym.BINOP, yytext(), yycolumn)); }
 {UNOP} 			 { return new Symbol(sym.UNOP, createToken(sym.UNOP, yytext(), yycolumn)); }
 {COMMENT}		 {}
 {BRANCO}         {}
