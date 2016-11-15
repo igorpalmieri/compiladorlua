@@ -66,6 +66,6 @@ BRANCO = [\n| |\t|\r]
 {BRANCO}         {}
 }
 
-<<EOF>> { return new Symbol( sym.EOF , createToken(sym.EOF, yytext(), yycolumn)); }
+<<EOF>> { return new Symbol( sym.EOF , createToken(sym.EOF, "EOF", yycolumn)); }
 
 [^] { throw new RuntimeException("Caractere inválido " + yytext()); }

@@ -1,21 +1,10 @@
---
--- Solving of the quadratic equation: ax^2 + bx + c =0
---
-
 text = "";
 a = 2.0;
 b = 1.0;
 c = -2.0;
 
-print( "\nEquation " .. a .. "x^2 + " .. b .. "x +
-       " .. c .. " = 0\n" );
-
--- 1)  Determinant calculus
---
 delta = b*b - (4 * a * c );
 
--- 2)  Solutions depending on the determinant
---
 if( delta<0 ) then
 	text = "There is no real solution."
 elseif( delta == 0 ) then

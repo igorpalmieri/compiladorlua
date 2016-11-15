@@ -687,7 +687,7 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
         zzAtEOF = true;
             zzDoEOF();
               {
-                return new Symbol( sym.EOF , createToken(sym.EOF, yytext(), yycolumn));
+                return new Symbol( sym.EOF , createToken(sym.EOF, "EOF", yycolumn));
               }
       }
       else {
