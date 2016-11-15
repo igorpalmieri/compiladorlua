@@ -18,7 +18,7 @@ import java_cup.runtime.Symbol;
 %column
 
 
-BINOP = "<"|"+"
+BINOP = "<"|"+"|"*"|"/"|"^"|"%"|".."|"<="|">="|"<"|">"|"=="|"~="|"and"|"or"
 NUMBER = (-)?([0-9]*\.)?[0-9]+
 VALUE = "nil"|"true"|"false"
 UNOP = "-"|"not"|"#"
