@@ -11,10 +11,11 @@ public class Compilador {
 		String sourceCode = Paths.get("").toAbsolutePath()+"/src/main/java/analyzer/example.lua";
 
 		AnalisadorLexico al = new AnalisadorLexico(new FileReader(sourceCode));
-		Symbol s;
+/*		Symbol s;
 		while((s = al.next_token()).sym != sym.EOF){
-			System.out.println(((LUAToken)s.value).type + " = " + ((LUAToken)s.value).value);
-		}
+			System.out.println(((LUAToken)s.value).value + " " + ((LUAToken)s.value).type);
+		}*/
+		
 		AnalisadorSintatico as = new AnalisadorSintatico(al);
 		
 		Node root = (Node) as.parse().value;
