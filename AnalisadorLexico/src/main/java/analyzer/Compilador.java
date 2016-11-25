@@ -3,19 +3,12 @@ package analyzer;
 import java.io.FileReader;
 import java.nio.file.Paths;
 
-import java_cup.runtime.Symbol;
-
 public class Compilador {
 
 	public static void main(String[] args) throws Exception{
 		String sourceCode = Paths.get("").toAbsolutePath()+"/src/main/java/analyzer/example.lua";
 
-		AnalisadorLexico al = new AnalisadorLexico(new FileReader(sourceCode));
-/*		Symbol s;
-		while((s = al.next_token()).sym != sym.EOF){
-			System.out.println(((LUAToken)s.value).value + " " + ((LUAToken)s.value).type);
-		}*/
-		
+		AnalisadorLexico al = new AnalisadorLexico(new FileReader(sourceCode));		
 		AnalisadorSintatico as = new AnalisadorSintatico(al);
 		
 		Node root = (Node) as.parse().value;

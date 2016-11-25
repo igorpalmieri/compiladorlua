@@ -2,14 +2,8 @@ package analyzer;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-
-import java_cup.internal_error;
-import java_cup.runtime.*;
 
 
 public class Gerador {

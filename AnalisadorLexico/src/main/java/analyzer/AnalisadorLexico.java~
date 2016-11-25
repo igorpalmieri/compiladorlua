@@ -824,7 +824,7 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
             }
           case 86: break;
           case 35: 
-            { return new Symbol(sym.PONTOS3, createToken(sym.TPONTOS, yytext(), yycolumn));
+            { return new Symbol(sym.PONTOS3, createToken(sym.PONTOS3, yytext(), yycolumn));
             }
           case 87: break;
           case 36: 

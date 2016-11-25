@@ -9,6 +9,13 @@ public class Node {
     	this.type = type;
     	this.list = list;
     }
+    
+    public Node(String type, Node only){
+    	Node[] k = {only};
+    	this.type = type;
+    	this.list = k;
+    }
+    
     public Node(LUAToken token){
     	this.token = token;
     	this.type = "Terminal";
