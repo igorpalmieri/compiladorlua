@@ -692,7 +692,7 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
             }
           case 53: break;
           case 2: 
-            { return new Symbol(sym.MENOS, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.MENOS, createToken(sym.MENOS, yytext(), yycolumn));
             }
           case 54: break;
           case 3: 
@@ -752,39 +752,39 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
             }
           case 68: break;
           case 17: 
-            { return new Symbol(sym.MAIS, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.MAIS, createToken(sym.MAIS, yytext(), yycolumn));
             }
           case 69: break;
           case 18: 
-            { return new Symbol(sym.MULTIPLICACAO, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.MULTIPLICACAO, createToken(sym.MULTIPLICACAO, yytext(), yycolumn));
             }
           case 70: break;
           case 19: 
-            { return new Symbol(sym.DIVISAO, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.DIVISAO, createToken(sym.DIVISAO, yytext(), yycolumn));
             }
           case 71: break;
           case 20: 
-            { return new Symbol(sym.EXPOENTE, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.EXPOENTE, createToken(sym.EXPOENTE, yytext(), yycolumn));
             }
           case 72: break;
           case 21: 
-            { return new Symbol(sym.RESTO, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.RESTO, createToken(sym.RESTO, yytext(), yycolumn));
             }
           case 73: break;
           case 22: 
-            { return new Symbol(sym.MENOR, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.MENOR, createToken(sym.MENOR, yytext(), yycolumn));
             }
           case 74: break;
           case 23: 
-            { return new Symbol(sym.MAIOR, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.MAIOR, createToken(sym.MAIOR, yytext(), yycolumn));
             }
           case 75: break;
           case 24: 
-            { return new Symbol(sym.TRALHA, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.TRALHA, createToken(sym.TRALHA, yytext(), yycolumn));
             }
           case 76: break;
           case 25: 
-            { return new Symbol(sym.PONTOS2, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.PONTOS2, createToken(sym.PONTOS2, yytext(), yycolumn));
             }
           case 77: break;
           case 26: 
@@ -796,7 +796,7 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
             }
           case 79: break;
           case 28: 
-            { return new Symbol(sym.OR, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.OR, createToken(sym.OR, yytext(), yycolumn));
             }
           case 80: break;
           case 29: 
@@ -808,19 +808,19 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
             }
           case 82: break;
           case 31: 
-            { return new Symbol(sym.IGUAL, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.IGUAL, createToken(sym.IGUAL, yytext(), yycolumn));
             }
           case 83: break;
           case 32: 
-            { return new Symbol(sym.MENORIGUAL, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.MENORIGUAL, createToken(sym.MENORIGUAL, yytext(), yycolumn));
             }
           case 84: break;
           case 33: 
-            { return new Symbol(sym.MAIORIGUAL, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.MAIORIGUAL, createToken(sym.MAIORIGUAL, yytext(), yycolumn));
             }
           case 85: break;
           case 34: 
-            { return new Symbol(sym.DIFERENTE, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.DIFERENTE, createToken(sym.DIFERENTE, yytext(), yycolumn));
             }
           case 86: break;
           case 35: 
@@ -832,15 +832,15 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
             }
           case 88: break;
           case 37: 
-            { return new Symbol(sym.NOT, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.NOT, createToken(sym.NOT, yytext(), yycolumn));
             }
           case 89: break;
           case 38: 
-            { return new Symbol(sym.NIL, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.NIL, createToken(sym.NIL, yytext(), yycolumn));
             }
           case 90: break;
           case 39: 
-            { return new Symbol(sym.AND, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.AND, createToken(sym.AND, yytext(), yycolumn));
             }
           case 91: break;
           case 40: 
@@ -856,7 +856,7 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
             }
           case 94: break;
           case 43: 
-            { return new Symbol(sym.TRUE, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.TRUE, createToken(sym.TRUE, yytext(), yycolumn));
             }
           case 95: break;
           case 44: 
@@ -872,7 +872,7 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
             }
           case 98: break;
           case 47: 
-            { return new Symbol(sym.FALSE, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.FALSE, createToken(sym.FALSE, yytext(), yycolumn));
             }
           case 99: break;
           case 48: 

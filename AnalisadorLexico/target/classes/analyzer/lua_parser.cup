@@ -15,6 +15,7 @@ parser code {:
 
 	public void syntax_error(Symbol cur_token) {
 		System.out.println("Syntax Error - " + ((LUAToken)cur_token.value).value);
+		System.out.println("Syntax Error - " + ((LUAToken)cur_token.value).start);
 	}
 :};
 
@@ -143,7 +144,8 @@ parlist ::= namelist:n1 {: RESULT = new Node("parlist",n1); :}
 		  | namelist:n1 VIRGULA:t1 PONTOS3:t2 {: Node[] k = {n1,new Node(t1),new Node(t2)}; RESULT = new Node("parlist",k); :}
 		  | PONTOS3:t1 {: RESULT = new Node("parlist",new Node(t1));  :} ;
 
-tableconstructor ::= ACHA:t1 fieldlist:n1 FCHA:t2 {: Node[] k = {new Node(t1),n1,new Node(t2)}; RESULT = new Node("tableconstructor",k); :};
+tableconstructor ::= ACHA:t1 FCHA:t2 {: Node[] k = {new Node(t1),new Node(t2)}; RESULT = new Node("tableconstructor",k); :} 
+				   | ACHA:t1 fieldlist:n1 FCHA:t2 {: Node[] k = {new Node(t1),n1,new Node(t2)}; RESULT = new Node("tableconstructor",k); :};
 
 fieldlist ::= field:n1 fieldlist2:n2 {: Node[] k = {n1,n2}; RESULT = new Node("fieldlist",k); :}
             | field:n1 fieldlist2:n2 fieldsep:n3 {: Node[] k = {n1,n2,n3}; RESULT = new Node("fieldlist",k); :};
