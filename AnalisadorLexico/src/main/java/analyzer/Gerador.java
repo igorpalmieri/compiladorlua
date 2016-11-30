@@ -12,7 +12,7 @@ public class Gerador {
 		File f = new File(Paths.get("").toAbsolutePath()+"/src/main/java/analyzer/lua_scanner.flex");
 		jflex.Main.generate(f);
 		
-		String[] s = {"-parser","AnalisadorSintatico","-expect","5",Paths.get("").toAbsolutePath()+"/src/main/java/analyzer/lua_parser.cup"};
+		String[] s = {"-parser","AnalisadorSintatico","-expect","5",Paths.get("").toAbsolutePath()+"/src/main/java/analyzer/lua_parser2.cup"};
 		try {
 			java_cup.Main.main(s);
 			moverArch("AnalisadorSintatico.java");
