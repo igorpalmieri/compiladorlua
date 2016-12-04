@@ -28,14 +28,20 @@ terminal LUAToken MAIS,MENOS,MULTIPLICACAO,DIVISAO,EXPOENTE,RESTO,PONTOS2;
 terminal LUAToken MENORIGUAL,MAIORIGUAL,MENOR,MAIOR,IGUAL,DIFERENTE;
 terminal LUAToken AND,OR,NIL,TRUE,FALSE,NOT,TRALHA;
 
-non terminal Node chunk, stat, laststat, block, varlist, explist, functioncall;
+non terminal Node program,chunk, stat, laststat, block, varlist, explist, functioncall;
 non terminal Node exp, namelist, function, funcname, funcbody, var, prefixexp;
 non terminal Node tableconstructor, args, parlist, fieldlist, field, fieldsep;
 non terminal Node elseif,funcname2,varlist2,fieldlist2,namelist2,explist2;
 
-precedence left EXPOENTE,NOT,TRALHA,MENOS,MULTIPLICACAO,DIVISAO,RESTO,MAIS,PONTOS2,MENOR,MAIOR,MENORIGUAL,MAIORIGUAL,DIFERENTE,IGUAL,AND,OR;
+precedence left EXPOENTE,NOT,TRALHA,MENOS,DIVISAO,RESTO,MAIS,PONTOS2,MENOR,MAIOR,MENORIGUAL,MAIORIGUAL,DIFERENTE,IGUAL,AND,OR;
+precedence left MULTIPLICACAO;
 
-start with chunk;
+start with program;
+
+program ::= chunk:n
+		    {: 
+				RESULT = new Node("program",n,"PGM:\n{0}"); 
+		    :};
 
 chunk ::= stat:n 
 		{: 
@@ -65,7 +71,9 @@ block ::= chunk:n
 stat ::=  varlist:n1 ATRIBUICAO:t explist:n2 
 		{: 
 			Node[] k = {n1,new Node(t),n2}; 
-			RESULT = new Node("stat",k,"executa codigo de atribuicao"); 
+			Tabela.var_index--;
+			Tabela.addVariable(n1.token.value);
+			RESULT = new Node("stat",k,"{2}\n"+Tabela.getVariable(n1.token.value)+" := t"+(Tabela.var_index)); 				
 		:} 
         | functioncall:n 
         {: 
@@ -79,7 +87,7 @@ stat ::=  varlist:n1 ATRIBUICAO:t explist:n2
         | WHILE:t1 exp:n1 DO:t2 block:n2 END:t3 
         {: 
         	Node[] k = {new Node(t1),n1,new Node(t2),n2,new Node(t3)};      	
-        	RESULT = new Node("stat",k,"{1}\nL"+Tabela.label_index+":\n if !t"+(Tabela.var_index-1)+" goto L"+(Tabela.label_index+1)+" \n {3} \n goto L"+Tabela.label_index+" \nL"+(Tabela.label_index+1)+": ");
+        	RESULT = new Node("stat",k,"{1}\nL"+Tabela.label_index+":\nif !t"+(--Tabela.var_index)+" goto L"+(Tabela.label_index+1)+" \n{3}\ngoto L"+Tabela.label_index+"\nL"+(Tabela.label_index+1)+": ");
         	Tabela.label_index += 2; 
         :}
         | REPEAT:t1 block:n1 UNTIL:t2 exp:n2 
@@ -90,7 +98,7 @@ stat ::=  varlist:n1 ATRIBUICAO:t explist:n2
         | IF:t1 exp:n1 THEN:t2 block:n2 END:t3 
         {: 
         	Node[] k = {new Node(t1),n1,new Node(t2),n2,new Node(t3)}; 
-        	RESULT = new Node("stat",k,"{1} \nif !t1 goto L0 \n {3} \nL0:"); 
+        	RESULT = new Node("stat",k,"{1} \nif !"+(--Tabela.var_index)+" goto L0 \n {3} \nL0:"); 
         :} 
         | IF:t1 exp:n1 THEN:t2 block:n2 ELSE:t3 block:n3 END:t4 
         {: 
@@ -273,7 +281,9 @@ explist2 ::= VIRGULA:t1 exp:n1
 
 exp ::= NIL:t1 
 		{: 
-			RESULT = new Node("exp",new Node(t1),t1.value);
+			RESULT = new Node("exp",new Node(t1),"t"+Tabela.var_index+" := "+t1.value);
+			Tabela.var_index++;
+			
 		:}  
 	  | FALSE:t1
 	  	{: 
@@ -285,7 +295,8 @@ exp ::= NIL:t1
 		:}  
       | NUMBER:t1 
       {: 
-      	RESULT = new Node("exp",new Node(t1),t1.value);  
+      	RESULT = new Node("exp",new Node(t1),"t"+Tabela.var_index+" := "+t1.value);  
+      	Tabela.var_index++;
       :} 
       | STRING:t1 
       {: 
@@ -307,41 +318,42 @@ exp ::= NIL:t1
       {: 
       	RESULT = new Node("exp",n1,"{0}");  
       :}  
+       | exp:n1 MULTIPLICACAO:t1 exp:n2  
+      {: 
+      	Node[] k = {n1,new Node(t1),n2}; 
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" * t"+(Tabela.var_index-1)); 
+      :}
       | exp:n1 MAIS:t1 exp:n2 
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := {0} + {2}"); 
-      	Tabela.var_index++;
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" + t"+(Tabela.var_index-1)); 
       :}
       | exp:n1 MENOS:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := {0} - {2}"); 
-      	Tabela.var_index++;
+       	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" - t"+(Tabela.var_index-1)); 
       :}
-      | exp:n1 MULTIPLICACAO:t1 exp:n2  
-      {: 
-      	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := {0} * {2}"); 
-      	Tabela.var_index++;
-      :}
+     
       | exp:n1 DIVISAO:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := {0} / {2}"); 
-      	Tabela.var_index++;
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" / t"+(Tabela.var_index-1)); 
       :}
       | exp:n1 EXPOENTE:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := "); 
-      	Tabela.var_index++;
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" e t"+(Tabela.var_index-1)); 
       :}
       | exp:n1 RESTO:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := "); 
-      	Tabela.var_index++;
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" % t"+(Tabela.var_index-1)); 
       :}
       | exp:n1 PONTOS2:t1 exp:n2  
       {: 
@@ -352,68 +364,70 @@ exp ::= NIL:t1
       | exp:n1 MENORIGUAL:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := {0} =< {2}"); 
-      	Tabela.var_index++;
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" =< t"+(Tabela.var_index-1)); 
       :}
       | exp:n1 MAIORIGUAL:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := {0} >= {2}"); 
-      	Tabela.var_index++;
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" >= t"+(Tabela.var_index-1)); 
       :}
       | exp:n1 MENOR:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := {0} < {2}"); 
-      	Tabela.var_index++;
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" < t"+(Tabela.var_index-1)); 
+
       :}
       | exp:n1 MAIOR:t1 exp:n2 
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := {0} > {2}"); 
-      	Tabela.var_index++;
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" > t"+(Tabela.var_index-1)); 
+
       :}
       | exp:n1 IGUAL:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := {0} == {2}"); 
-      	Tabela.var_index++;
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" == t"+(Tabela.var_index-1)); 
+
       :}
       | exp:n1 DIFERENTE:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := {0} ~= {2}"); 
-      	Tabela.var_index++;
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" ~= t"+(Tabela.var_index-1)); 
       :}
       | exp:n1 AND:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := {0} ^ {2}"); 
-      	Tabela.var_index++;
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" ^ t"+(Tabela.var_index-1)); 
+
       :}
       | exp:n1 OR:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := {0} v {2}"); 
-      	Tabela.var_index++;
+      	Tabela.var_index--;
+      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" v t"+(Tabela.var_index-1)); 
+
       :}
       | MENOS:t1 exp:n1  
       {: 
       	Node[] k = {n1,new Node(t1)}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := -{1}"); 
-      	Tabela.var_index++;
+      	RESULT = new Node("exp",k,"t"+(Tabela.var_index-1)+" := -{1}"); 
       :}
 	  | NOT:t1 exp:n1  
       {: 
       	Node[] k = {n1,new Node(t1)}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := !{1}"); 
-      	Tabela.var_index++;
+      	RESULT = new Node("exp",k,"t"+(Tabela.var_index-1)+" := !{1}"); 
       :}
       | TRALHA:t1 exp:n1  
       {: 
       	Node[] k = {n1,new Node(t1)}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := !{1}"); 
-      	Tabela.var_index++;
+      	RESULT = new Node("exp",k,"t"+(Tabela.var_index-1)+" := !{1}"); 
       :};
 		
 prefixexp ::= var:n1 {: RESULT = new Node("prefixexp",n1); :}   
