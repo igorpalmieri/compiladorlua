@@ -13,7 +13,7 @@ public class Compilador {
 		
 		Node root = (Node) as.parse().value;
 		
-		printTree(root,"");
+		//printTree(root,"");
 		
 		System.out.println(root.print());
 	}
