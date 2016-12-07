@@ -1,6 +1,7 @@
 package analyzer;
 
 import java_cup.runtime.*;
+import java.util.ArrayList;
 
 parser code {:
 
@@ -33,8 +34,8 @@ non terminal Node exp, namelist, function, funcname, funcbody, var, prefixexp;
 non terminal Node tableconstructor, args, parlist, fieldlist, field, fieldsep;
 non terminal Node elseif,funcname2,varlist2,fieldlist2,namelist2,explist2;
 
-precedence left EXPOENTE,NOT,TRALHA,MENOS,DIVISAO,RESTO,MAIS,PONTOS2,MENOR,MAIOR,MENORIGUAL,MAIORIGUAL,DIFERENTE,IGUAL,AND,OR;
-precedence left MULTIPLICACAO;
+precedence left EXPOENTE,NOT,TRALHA,MENOS,RESTO,MAIS,PONTOS2,MENOR,MAIOR,MENORIGUAL,MAIORIGUAL,DIFERENTE,IGUAL,AND,OR;
+precedence left MULTIPLICACAO,DIVISAO;
 
 start with program;
 
@@ -47,20 +48,19 @@ chunk ::= stat:n
 		{: 
 			RESULT = new Node("chunk",n,"{0}"); 
 		:} 
-		| stat:n PVIRGULA:t 
+		| stat:n1 chunk:n2 
+		{: 
+			Node[] k = {n1,n2}; 
+			RESULT = new Node("chunk",k,"{0}\n{1}"); 
+		:}
+		| laststat:n
+		{: 
+			RESULT = new Node("chunk",n,"{0}"); 
+		:}
+		| laststat:n PVIRGULA:t 
 		{: 
 			Node[] k = {n,new Node(t)}; 
 			RESULT = new Node("chunk",k,"{0}"); 
-		:}
-		| stat:n1 PVIRGULA:t chunk:n2 
-		{: 
-			Node[] k = {n1,new Node(t),n2}; 
-			RESULT = new Node("chunk",k,"{0}\n{2}"); 
-		:}
-		| stat:n1 PVIRGULA:t1 laststat:n2 PVIRGULA:t2 
-		{: 
-			Node[] k = {n1,new Node(t1),n2,new Node(t2)}; 
-			RESULT = new Node("chunk",k,"{0}\n{2}"); 
 		:};
 
 block ::= chunk:n 
@@ -68,16 +68,22 @@ block ::= chunk:n
 			Node[] k = {n}; RESULT = new Node("block",k,"{0}"); 
 		:};
 
-stat ::=  varlist:n1 ATRIBUICAO:t explist:n2 
+stat ::= PVIRGULA:t
+		{:
+			RESULT = new Node(t);
+		:}
+		| varlist:n1 ATRIBUICAO:t explist:n2 
 		{: 
 			Node[] k = {n1,new Node(t),n2}; 
-			Tabela.var_index--;
-			Tabela.addVariable(n1.token.value);
-			RESULT = new Node("stat",k,"{2}\n"+Tabela.getVariable(n1.token.value)+" := t"+(Tabela.var_index)); 				
+			String[] vars = n1.result.split(",");
+			String[] exps = n2.result.split(",");
+			String code = "";
+			for(int i=0;i<vars.length;i++) code += vars[i] + " := " + exps[i] + "\n";			
+			RESULT = new Node("stat",k,code); 		
 		:} 
         | functioncall:n 
         {: 
-        	RESULT = new Node("functioncall",n,"call function {0}"); 
+        	RESULT = n; 
         :}  
         | DO:t1 block:n END:t2 
         {: 
@@ -87,18 +93,17 @@ stat ::=  varlist:n1 ATRIBUICAO:t explist:n2
         | WHILE:t1 exp:n1 DO:t2 block:n2 END:t3 
         {: 
         	Node[] k = {new Node(t1),n1,new Node(t2),n2,new Node(t3)};      	
-        	RESULT = new Node("stat",k,"{1}\nL"+Tabela.label_index+":\nif !t"+(--Tabela.var_index)+" goto L"+(Tabela.label_index+1)+" \n{3}\ngoto L"+Tabela.label_index+"\nL"+(Tabela.label_index+1)+": ");
-        	Tabela.label_index += 2; 
+        	RESULT = new Node("stat",k);
         :}
         | REPEAT:t1 block:n1 UNTIL:t2 exp:n2 
         {: 
         	Node[] k = {new Node(t1),n1,new Node(t2),n2};
-        	RESULT = new Node("stat",k,"L0:\n {1} \n if {3} goto L0");
+        	RESULT = new Node("stat",k);
         :}
         | IF:t1 exp:n1 THEN:t2 block:n2 END:t3 
         {: 
         	Node[] k = {new Node(t1),n1,new Node(t2),n2,new Node(t3)}; 
-        	RESULT = new Node("stat",k,"{1} \nif !"+(--Tabela.var_index)+" goto L0 \n {3} \nL0:"); 
+        	RESULT = new Node("stat",k);
         :} 
         | IF:t1 exp:n1 THEN:t2 block:n2 ELSE:t3 block:n3 END:t4 
         {: 
@@ -142,13 +147,13 @@ stat ::=  varlist:n1 ATRIBUICAO:t explist:n2
         :}
         | LOCAL:t1 namelist:n1 
         {: 
-        	Node[] k = {new Node(t1),n1}; 
-        	RESULT = new Node("stat",k); 
+        	Node[] g = {new Node(t1),n1}; 
+        	RESULT = new Node("stat",g); 
         :}
         | LOCAL:t1 namelist:n1 ATRIBUICAO:t2 explist:n2 
-        {: 
-        	Node[] k = {new Node(t1),n1,new Node(t2),n2};
-        	RESULT = new Node("stat",k); 
+        {:     
+        	Node[] g = {new Node(t1),n1,new Node(t2),n2};
+        	RESULT = new Node("stat",g); 
         :};
         
 
@@ -167,64 +172,47 @@ laststat ::= RETURN:t1 explist:n1
 			{: 
 				Node[] k = {new Node(t1),n1}; 
 				RESULT = new Node("laststat",k); 
+			:}
+		   |
+		   	RETURN:t1
+			{: 
+				RESULT = new Node("laststat",new Node(t1),t1.value); 
 			:} 
 		   | BREAK:t1 
 		   {: 
 		   		Node[] k = {new Node(t1)}; 
-		   		RESULT = new Node("laststat",k); 
+		   		RESULT = new Node("laststat",new Node(t1),t1.value); 
 		   	:};
 
 funcname ::= NAME:t1 
 			{: 
 				Node[] k = {new Node(t1)}; 
-				RESULT = new Node("funcname",k); 
+				RESULT = new Node("funcname",k,t1.value); 
 			:} 
-		   | NAME:t1 funcname2:n1 
+		   | NAME:t1 PONTO:t2 funcname:n1 
 		   {: 
-		   		Node[] k = {new Node(t1),n1}; 
-		   		RESULT = new Node("funcname",k); 
+		   		Node[] k = {new Node(t1),new Node(t2),n1}; 
+		   		RESULT = new Node("funcname",k,"TODO - funcname"); 
 		   :} 
-		   | NAME:t1 funcname2:n1 DPONTOS:t2 NAME:t3 
+		   | funcname:n1 DPONTOS:t2 NAME:t3 
 		   {: 
-		   		Node[] k = {new Node(t1),n1,new Node(t2),new Node(t3)}; 
-		   		RESULT = new Node("funcname",k); 
+		   		Node[] k = {n1,new Node(t2),new Node(t3)}; 
+		   		RESULT = new Node("funcname",k,"TODO - funcname"); 
 		   :};
-
-funcname2 ::= PONTO:t1 NAME:t2 
-			{: 
-				Node[] k = {new Node(t1),new Node(t2)}; 
-				RESULT = new Node("funcname2",k); 
-			:} 
-			| PONTO:t1 NAME:t2 funcname2:n1 
-			{: 
-				Node[] k = {new Node(t1),new Node(t2),n1}; 
-				RESULT = new Node("laststat",k);
-			:};
 
 varlist ::= var:n 
-			{: 
-				RESULT = n; 
+			{: 			
+				RESULT = n;
 			:} 
-          | var:n1 varlist2:n2 
+          | var:n1 VIRGULA:t1 varlist:n2 
           	{: 
-          		Node[] k = {n1,n2}; 
-          		RESULT = new Node("varlist",k); 
+          		Node[] k = {n1,new Node(t1),n2}; 
+          		RESULT = new Node("varlist",k,"",n1.result + "," + n2.result); 
           	:};
-
-varlist2 ::= VIRGULA:t1 var:n1 
-			{: 
-				Node[] k = {new Node(t1),n1}; 
-				RESULT = new Node("varlist2",k); 
-			:}
-		   | VIRGULA:t1 varlist2:n1 
-		   {: 
-		   		Node[] k = {new Node(t1),n1}; 
-		   		RESULT = new Node("varlist2",k); 
-		   :};
-
+          	
 var ::= NAME:t 
 		{: 
-			RESULT = new Node(t); 
+			RESULT = new Node(t,SymTable.getVar(t.value));
 		:} 
       | prefixexp:n1 ACOL:t1 exp:n2 FCOL:t2 
       {: 
@@ -237,227 +225,260 @@ var ::= NAME:t
       	RESULT = new Node("var",k); 
       :};
 
-namelist ::= NAME:t1 
+namelist ::= NAME:t
 		   {: 
-		 	RESULT = new Node("namelist",new Node(t1));  
+		 	RESULT = new Node(t,SymTable.getVar(t.value));
 		   :} 
-           | NAME:t1 varlist2:n1 
+           | NAME:t1 VIRGULA:t2 namelist:n1 
            {: 
-           	Node[] k = {new Node(t1),n1}; 
-           	RESULT = new Node("namelist",k); 
+            Node n = new Node(t1,SymTable.getVar(t1.value));
+           	Node[] k = {n,new Node(t2),n1}; 
+           	RESULT = new Node("varlist",k,"",n.result + "," + n1.result); 
            :};
 
-namelist2 ::= VIRGULA:t1 NAME:t2 
-			{: 
-				Node[] k = {new Node(t1),new Node(t2)}; 
-				RESULT = new Node("namelist2",k); 
-			:}
-		    | VIRGULA:t1 namelist2:n1 
-		    {: 
-		    	Node[] k = {new Node(t1),n1}; 
-		    	RESULT = new Node("namelist2",k); 
-		    :};
+		   
 
 explist ::= exp:n 
 		    {: 
 		    	RESULT = n;
 		    :} 
-          | exp:n1 explist2:n2 
+          | exp:n1 VIRGULA:t1 explist:n2
           	{: 
-          		Node[] k = {n1,n2};
-          		RESULT = new Node("explist",k); 
+          		Node[] k = {n1,new Node(t1),n2};
+          		RESULT = new Node("explist",k,"",n1.result + "," + n2.result); 
           	:};
-
-explist2 ::= VIRGULA:t1 exp:n1 
-		   {: 
-		   		Node[] k = {new Node(t1),n1}; 
-		   		RESULT = new Node("explist2",k);
-		   :}
-		   | VIRGULA:t1 explist2:n1 
-		   {: 
-		   		Node[] k = {new Node(t1),n1};
-		   		RESULT = new Node("explist2",k);
-		   :};
 
 exp ::= NIL:t1 
 		{: 
-			RESULT = new Node("exp",new Node(t1),"t"+Tabela.var_index+" := "+t1.value);
-			Tabela.var_index++;
-			
+			RESULT = new Node(t1);	
 		:}  
 	  | FALSE:t1
 	  	{: 
-			RESULT = new Node("exp",new Node(t1),t1.value);
+			RESULT = new Node(t1);	
 		:}  
 	  | TRUE:t1
 	  	{: 
-			RESULT = new Node("exp",new Node(t1),t1.value);
+			RESULT = new Node(t1);	
 		:}  
       | NUMBER:t1 
       {: 
-      	RESULT = new Node("exp",new Node(t1),"t"+Tabela.var_index+" := "+t1.value);  
-      	Tabela.var_index++;
+      	RESULT = new Node(t1);	
       :} 
       | STRING:t1 
       {: 
-      	RESULT = new Node("exp",new Node(t1),t1.value);  
+      	RESULT = new Node(t1);	
       :} 
       | PONTOS3:t1 
       {: 
-      	RESULT = new Node("exp",new Node(t1),t1.value);  
+      	RESULT = new Node(t1);	
       :}  
       | function:n1 
       {: 
-      	RESULT = new Node("exp",n1,"{0}");  
+      	RESULT = n1;
       :} 
       | prefixexp:n1 
       {: 
-      	RESULT = new Node("exp",n1,"{0}");  
+      	RESULT = n1;
       :}   
       | tableconstructor:n1 
       {: 
-      	RESULT = new Node("exp",n1,"{0}");  
+      	RESULT = n1;
       :}  
        | exp:n1 MULTIPLICACAO:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" * t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
       :}
       | exp:n1 MAIS:t1 exp:n2 
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" + t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
       :}
       | exp:n1 MENOS:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-       	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" - t"+(Tabela.var_index-1)); 
+       	RESULT = new Node("exp",k); 
       :}
      
       | exp:n1 DIVISAO:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" / t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
       :}
       | exp:n1 EXPOENTE:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" e t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
       :}
       | exp:n1 RESTO:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" % t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
       :}
       | exp:n1 PONTOS2:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	RESULT = new Node("exp",k,"t"+Tabela.var_index+" := "); 
-      	Tabela.var_index++;
+      	RESULT = new Node("exp",k); 
       :}
       | exp:n1 MENORIGUAL:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" =< t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
       :}
       | exp:n1 MAIORIGUAL:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" >= t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
       :}
       | exp:n1 MENOR:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" < t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
 
       :}
       | exp:n1 MAIOR:t1 exp:n2 
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" > t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
 
       :}
       | exp:n1 IGUAL:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" == t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
 
       :}
       | exp:n1 DIFERENTE:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" ~= t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
       :}
       | exp:n1 AND:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" ^ t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
 
       :}
       | exp:n1 OR:t1 exp:n2  
       {: 
       	Node[] k = {n1,new Node(t1),n2}; 
-      	Tabela.var_index--;
-      	RESULT = new Node("exp",k,"{0}\n{2}\nt"+(Tabela.var_index-1)+" := t"+(Tabela.var_index)+" v t"+(Tabela.var_index-1)); 
+      	RESULT = new Node("exp",k); 
 
       :}
       | MENOS:t1 exp:n1  
       {: 
       	Node[] k = {n1,new Node(t1)}; 
-      	RESULT = new Node("exp",k,"t"+(Tabela.var_index-1)+" := -{1}"); 
+      	RESULT = new Node("exp",k); 
       :}
 	  | NOT:t1 exp:n1  
       {: 
       	Node[] k = {n1,new Node(t1)}; 
-      	RESULT = new Node("exp",k,"t"+(Tabela.var_index-1)+" := !{1}"); 
+      	RESULT = new Node("exp",k); 
       :}
       | TRALHA:t1 exp:n1  
       {: 
       	Node[] k = {n1,new Node(t1)}; 
-      	RESULT = new Node("exp",k,"t"+(Tabela.var_index-1)+" := !{1}"); 
+      	RESULT = new Node("exp",k); 
       :};
 		
-prefixexp ::= var:n1 {: RESULT = new Node("prefixexp",n1); :}   
-            | functioncall:n1 {: RESULT = new Node("prefixexp",n1);  :}   
+prefixexp ::= var:n1 
+			{: 
+				RESULT = new Node("prefixexp",n1,"{0}"); 
+			:}   
+            | functioncall:n1 
+            {: 
+            	RESULT = new Node("prefixexp",n1);  
+            :}   
             | APAR:t1 exp:n1 FPAR:t2 
             {: 
             	Node[] k = {new Node(t1),n1,new Node(t2)}; 
             	RESULT = new Node("prefixexp",k,"{1}"); 
             :};
 
-functioncall ::= prefixexp:n1 args:n2  {: Node[] k = {n1,n2}; RESULT = new Node("functioncall",k); :}
-               | prefixexp:n1 DPONTOS:t1 NAME:t2 args:n2  {: Node[] k = {n1,new Node(t1),new Node(t2),n2}; RESULT = new Node("functioncall",k); :};
+functioncall ::= prefixexp:n1 args:n2  
+			  {: 
+			  		Node[] k = {n1,n2}; 
+			  		RESULT = new Node("functioncall",k,"Executa functioncall"); 
+			  :}
+               | prefixexp:n1 DPONTOS:t1 NAME:t2 args:n2  
+              {: 
+              		Node[] k = {n1,new Node(t1),new Node(t2),n2}; 
+              		RESULT = new Node("functioncall",k,"Executa functioncall"); 
+              :};
 
-args ::= APAR:t1 explist:n1 FPAR:t2 {: Node[] k = {new Node(t1),n1,new Node(t2)}; RESULT = new Node("args",k); :}
-       | tableconstructor:n1 {: RESULT = new Node("tableconstructor",n1); :}  
-       | STRING:t1 {: RESULT = new Node("args",new Node(t1));  :} ;
+args ::= APAR:t1 explist:n1 FPAR:t2 
+		{: 
+			Node[] k = {new Node(t1),n1,new Node(t2)}; 
+			RESULT = new Node("args",k,"{1}"); 
+		:}
+		| APAR:t1 FPAR:t2 
+       {: 
+       		Node[] k = {new Node(t1),new Node(t2)}; 
+       		RESULT = new Node("args",k); 
+       :}  
+       | tableconstructor:n1 
+       {: 
+       		RESULT = new Node("args",n1); 
+       :}  
+       | STRING:t1 
+       {: 
+       		RESULT = new Node("args",new Node(t1));  
+       :} ;
 
-function ::= FUNCTION:t1 funcbody:n1 {: Node[] k = {new Node(t1),n1}; RESULT = new Node("function",k); :};
+function ::= FUNCTION:t1 funcbody:n1 
+			{: 
+				Node[] k = {new Node(t1),n1}; 
+				RESULT = new Node("function",k); 
+			:};
 
-funcbody ::= APAR:t1 parlist:n1 FPAR:t2 block:n2 END:t3 {: Node[] k = {new Node(t1),n1,new Node(t2),n2,new Node(t3)}; RESULT = new Node("funcbody",k); :};
+funcbody ::= APAR:t1 FPAR:t2 block:n2 END:t3 
+			{: 
+				Node[] k = {new Node(t1),new Node(t2),n2,new Node(t3)}; 
+				RESULT = new Node("funcbody",k); 
+			:}
+			|
+			APAR:t1 parlist:n1 FPAR:t2 block:n2 END:t3 
+			{: 
+				Node[] k = {new Node(t1),n1,new Node(t2),n2,new Node(t3)}; 
+				RESULT = new Node("funcbody",k); 
+			:};
 
-parlist ::= namelist:n1 {: RESULT = new Node("parlist",n1); :} 
-		  | namelist:n1 VIRGULA:t1 PONTOS3:t2 {: Node[] k = {n1,new Node(t1),new Node(t2)}; RESULT = new Node("parlist",k); :}
-		  | PONTOS3:t1 {: RESULT = new Node("parlist",new Node(t1));  :} ;
 
-tableconstructor ::= ACHA:t1 FCHA:t2 {: Node[] k = {new Node(t1),new Node(t2)}; RESULT = new Node("tableconstructor",k); :} 
-				   | ACHA:t1 fieldlist:n1 FCHA:t2 {: Node[] k = {new Node(t1),n1,new Node(t2)}; RESULT = new Node("tableconstructor",k); :};
+parlist ::= NAME:t1 
+		   {: 
+		 	RESULT = new Node("namelist2",new Node(t1));  
+		   :} 
+           | NAME:t1 VIRGULA:t2 parlist:n1 
+           {: 
+           	Node[] k = {new Node(t1),new Node(t2),n1}; 
+           	RESULT = new Node("namelist2",k); 
+           :} 
+		   | PONTOS3:t1 
+		   {: 
+		  		RESULT = new Node("parlist",new Node(t1));  
+		   :};
 
-fieldlist ::= field:n1 fieldlist2:n2 {: Node[] k = {n1,n2}; RESULT = new Node("fieldlist",k); :}
-            | field:n1 fieldlist2:n2 fieldsep:n3 {: Node[] k = {n1,n2,n3}; RESULT = new Node("fieldlist",k); :};
+tableconstructor ::= ACHA:t1 FCHA:t2 
+					{: 
+						Node[] k = {new Node(t1),new Node(t2)}; 
+						RESULT = new Node("tableconstructor",k); 
+					:} 
+				   | ACHA:t1 fieldlist:n1 FCHA:t2 
+				   {: 
+				   		Node[] k = {new Node(t1),n1,new Node(t2)}; 
+				   		RESULT = new Node("tableconstructor",k); 
+				   :};
+
+fieldlist ::= field:n1 fieldlist2:n2 
+			{: 
+				Node[] k = {n1,n2}; 
+				RESULT = new Node("fieldlist",k); 
+			:}
+            | field:n1 fieldlist2:n2 fieldsep:n3 
+            {: 
+            	Node[] k = {n1,n2,n3}; 
+            	RESULT = new Node("fieldlist",k); 
+            :};
 
 fieldlist2 ::= fieldsep:n1 field:n2 {: Node[] k = {n1,n2}; RESULT = new Node("fieldlist2",k); :}
              | fieldsep:n1 field:n2 fieldlist2:n3 {: Node[] k = {n1,n2,n3}; RESULT = new Node("fieldlist2",k); :};

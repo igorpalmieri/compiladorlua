@@ -598,26 +598,44 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
         case '\u0085':
         case '\u2028':
         case '\u2029':
-          yycolumn = 0;
+          yyline++;
           zzR = false;
           break;
         case '\r':
-          yycolumn = 0;
+          yyline++;
           zzR = true;
           break;
         case '\n':
           if (zzR)
             zzR = false;
           else {
-            yycolumn = 0;
+            yyline++;
           }
           break;
         default:
           zzR = false;
-          yycolumn += zzCharCount;
         }
       }
 
+      if (zzR) {
+        // peek one character ahead if it is \n (if we have counted one line too much)
+        boolean zzPeek;
+        if (zzMarkedPosL < zzEndReadL)
+          zzPeek = zzBufferL[zzMarkedPosL] == '\n';
+        else if (zzAtEOF)
+          zzPeek = false;
+        else {
+          boolean eof = zzRefill();
+          zzEndReadL = zzEndRead;
+          zzMarkedPosL = zzMarkedPos;
+          zzBufferL = zzBuffer;
+          if (eof) 
+            zzPeek = false;
+          else 
+            zzPeek = zzBufferL[zzMarkedPosL] == '\n';
+        }
+        if (zzPeek) yyline--;
+      }
       zzAction = -1;
 
       zzCurrentPosL = zzCurrentPos = zzStartRead = zzMarkedPosL;
@@ -682,7 +700,7 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
         zzAtEOF = true;
             zzDoEOF();
               {
-                return new Symbol( sym.EOF , createToken(sym.EOF, "EOF", yycolumn));
+                return new Symbol( sym.EOF , createToken(sym.EOF, "EOF", yyline));
               }
       }
       else {
@@ -692,19 +710,19 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
             }
           case 53: break;
           case 2: 
-            { return new Symbol(sym.MENOS, createToken(sym.MENOS, yytext(), yycolumn));
+            { return new Symbol(sym.MENOS, createToken(sym.MENOS, yytext(), yyline));
             }
           case 54: break;
           case 3: 
-            { return new Symbol(sym.NUMBER, createToken(sym.NUMBER, yytext(), yycolumn));
+            { return new Symbol(sym.NUMBER, createToken(sym.NUMBER, yytext(), yyline));
             }
           case 55: break;
           case 4: 
-            { return new Symbol(sym.PONTO, createToken(sym.PONTO, yytext(), yycolumn));
+            { return new Symbol(sym.PONTO, createToken(sym.PONTO, yytext(), yyline));
             }
           case 56: break;
           case 5: 
-            { return new Symbol(sym.NAME, createToken(sym.NAME, yytext(), yycolumn));
+            { return new Symbol(sym.NAME, createToken(sym.NAME, yytext(), yyline));
             }
           case 57: break;
           case 6: 
@@ -712,187 +730,187 @@ public class AnalisadorLexico implements java_cup.runtime.Scanner {
             }
           case 58: break;
           case 7: 
-            { return new Symbol(sym.APAR, createToken(sym.APAR, yytext(), yycolumn));
+            { return new Symbol(sym.APAR, createToken(sym.APAR, yytext(), yyline));
             }
           case 59: break;
           case 8: 
-            { return new Symbol(sym.FPAR, createToken(sym.FPAR, yytext(), yycolumn));
+            { return new Symbol(sym.FPAR, createToken(sym.FPAR, yytext(), yyline));
             }
           case 60: break;
           case 9: 
-            { return new Symbol(sym.ACOL, createToken(sym.ACOL, yytext(), yycolumn));
+            { return new Symbol(sym.ACOL, createToken(sym.ACOL, yytext(), yyline));
             }
           case 61: break;
           case 10: 
-            { return new Symbol(sym.FCOL, createToken(sym.FCOL, yytext(), yycolumn));
+            { return new Symbol(sym.FCOL, createToken(sym.FCOL, yytext(), yyline));
             }
           case 62: break;
           case 11: 
-            { return new Symbol(sym.ACHA, createToken(sym.ACHA, yytext(), yycolumn));
+            { return new Symbol(sym.ACHA, createToken(sym.ACHA, yytext(), yyline));
             }
           case 63: break;
           case 12: 
-            { return new Symbol(sym.FCHA, createToken(sym.FCHA, yytext(), yycolumn));
+            { return new Symbol(sym.FCHA, createToken(sym.FCHA, yytext(), yyline));
             }
           case 64: break;
           case 13: 
-            { return new Symbol(sym.PVIRGULA, createToken(sym.PVIRGULA, yytext(), yycolumn));
+            { return new Symbol(sym.PVIRGULA, createToken(sym.PVIRGULA, yytext(), yyline));
             }
           case 65: break;
           case 14: 
-            { return new Symbol(sym.VIRGULA, createToken(sym.VIRGULA, yytext(), yycolumn));
+            { return new Symbol(sym.VIRGULA, createToken(sym.VIRGULA, yytext(), yyline));
             }
           case 66: break;
           case 15: 
-            { return new Symbol(sym.DPONTOS, createToken(sym.DPONTOS, yytext(), yycolumn));
+            { return new Symbol(sym.DPONTOS, createToken(sym.DPONTOS, yytext(), yyline));
             }
           case 67: break;
           case 16: 
-            { return new Symbol(sym.ATRIBUICAO, createToken(sym.ATRIBUICAO, yytext(), yycolumn));
+            { return new Symbol(sym.ATRIBUICAO, createToken(sym.ATRIBUICAO, yytext(), yyline));
             }
           case 68: break;
           case 17: 
-            { return new Symbol(sym.MAIS, createToken(sym.MAIS, yytext(), yycolumn));
+            { return new Symbol(sym.MAIS, createToken(sym.MAIS, yytext(), yyline));
             }
           case 69: break;
           case 18: 
-            { return new Symbol(sym.MULTIPLICACAO, createToken(sym.MULTIPLICACAO, yytext(), yycolumn));
+            { return new Symbol(sym.MULTIPLICACAO, createToken(sym.MULTIPLICACAO, yytext(), yyline));
             }
           case 70: break;
           case 19: 
-            { return new Symbol(sym.DIVISAO, createToken(sym.DIVISAO, yytext(), yycolumn));
+            { return new Symbol(sym.DIVISAO, createToken(sym.DIVISAO, yytext(), yyline));
             }
           case 71: break;
           case 20: 
-            { return new Symbol(sym.EXPOENTE, createToken(sym.EXPOENTE, yytext(), yycolumn));
+            { return new Symbol(sym.EXPOENTE, createToken(sym.EXPOENTE, yytext(), yyline));
             }
           case 72: break;
           case 21: 
-            { return new Symbol(sym.RESTO, createToken(sym.RESTO, yytext(), yycolumn));
+            { return new Symbol(sym.RESTO, createToken(sym.RESTO, yytext(), yyline));
             }
           case 73: break;
           case 22: 
-            { return new Symbol(sym.MENOR, createToken(sym.MENOR, yytext(), yycolumn));
+            { return new Symbol(sym.MENOR, createToken(sym.MENOR, yytext(), yyline));
             }
           case 74: break;
           case 23: 
-            { return new Symbol(sym.MAIOR, createToken(sym.MAIOR, yytext(), yycolumn));
+            { return new Symbol(sym.MAIOR, createToken(sym.MAIOR, yytext(), yyline));
             }
           case 75: break;
           case 24: 
-            { return new Symbol(sym.TRALHA, createToken(sym.TRALHA, yytext(), yycolumn));
+            { return new Symbol(sym.TRALHA, createToken(sym.TRALHA, yytext(), yyline));
             }
           case 76: break;
           case 25: 
-            { return new Symbol(sym.PONTOS2, createToken(sym.PONTOS2, yytext(), yycolumn));
+            { return new Symbol(sym.PONTOS2, createToken(sym.PONTOS2, yytext(), yyline));
             }
           case 77: break;
           case 26: 
-            { return new Symbol(sym.STRING, createToken(sym.STRING, yytext(), yycolumn));
+            { return new Symbol(sym.STRING, createToken(sym.STRING, yytext(), yyline));
             }
           case 78: break;
           case 27: 
-            { return new Symbol(sym.DO, createToken(sym.DO, yytext(), yycolumn));
+            { return new Symbol(sym.DO, createToken(sym.DO, yytext(), yyline));
             }
           case 79: break;
           case 28: 
-            { return new Symbol(sym.OR, createToken(sym.OR, yytext(), yycolumn));
+            { return new Symbol(sym.OR, createToken(sym.OR, yytext(), yyline));
             }
           case 80: break;
           case 29: 
-            { return new Symbol(sym.IN, createToken(sym.IN, yytext(), yycolumn));
+            { return new Symbol(sym.IN, createToken(sym.IN, yytext(), yyline));
             }
           case 81: break;
           case 30: 
-            { return new Symbol(sym.IF, createToken(sym.IF, yytext(), yycolumn));
+            { return new Symbol(sym.IF, createToken(sym.IF, yytext(), yyline));
             }
           case 82: break;
           case 31: 
-            { return new Symbol(sym.IGUAL, createToken(sym.IGUAL, yytext(), yycolumn));
+            { return new Symbol(sym.IGUAL, createToken(sym.IGUAL, yytext(), yyline));
             }
           case 83: break;
           case 32: 
-            { return new Symbol(sym.MENORIGUAL, createToken(sym.MENORIGUAL, yytext(), yycolumn));
+            { return new Symbol(sym.MENORIGUAL, createToken(sym.MENORIGUAL, yytext(), yyline));
             }
           case 84: break;
           case 33: 
-            { return new Symbol(sym.MAIORIGUAL, createToken(sym.MAIORIGUAL, yytext(), yycolumn));
+            { return new Symbol(sym.MAIORIGUAL, createToken(sym.MAIORIGUAL, yytext(), yyline));
             }
           case 85: break;
           case 34: 
-            { return new Symbol(sym.DIFERENTE, createToken(sym.DIFERENTE, yytext(), yycolumn));
+            { return new Symbol(sym.DIFERENTE, createToken(sym.DIFERENTE, yytext(), yyline));
             }
           case 86: break;
           case 35: 
-            { return new Symbol(sym.PONTOS3, createToken(sym.PONTOS3, yytext(), yycolumn));
+            { return new Symbol(sym.PONTOS3, createToken(sym.PONTOS3, yytext(), yyline));
             }
           case 87: break;
           case 36: 
-            { return new Symbol(sym.END, createToken(sym.END, yytext(), yycolumn));
+            { return new Symbol(sym.END, createToken(sym.END, yytext(), yyline));
             }
           case 88: break;
           case 37: 
-            { return new Symbol(sym.NOT, createToken(sym.NOT, yytext(), yycolumn));
+            { return new Symbol(sym.NOT, createToken(sym.NOT, yytext(), yyline));
             }
           case 89: break;
           case 38: 
-            { return new Symbol(sym.NIL, createToken(sym.NIL, yytext(), yycolumn));
+            { return new Symbol(sym.NIL, createToken(sym.NIL, yytext(), yyline));
             }
           case 90: break;
           case 39: 
-            { return new Symbol(sym.AND, createToken(sym.AND, yytext(), yycolumn));
+            { return new Symbol(sym.AND, createToken(sym.AND, yytext(), yyline));
             }
           case 91: break;
           case 40: 
-            { return new Symbol(sym.FOR, createToken(sym.FOR, yytext(), yycolumn));
+            { return new Symbol(sym.FOR, createToken(sym.FOR, yytext(), yyline));
             }
           case 92: break;
           case 41: 
-            { return new Symbol(sym.ELSE, createToken(sym.ELSE, yytext(), yycolumn));
+            { return new Symbol(sym.ELSE, createToken(sym.ELSE, yytext(), yyline));
             }
           case 93: break;
           case 42: 
-            { return new Symbol(sym.THEN, createToken(sym.THEN, yytext(), yycolumn));
+            { return new Symbol(sym.THEN, createToken(sym.THEN, yytext(), yyline));
             }
           case 94: break;
           case 43: 
-            { return new Symbol(sym.TRUE, createToken(sym.TRUE, yytext(), yycolumn));
+            { return new Symbol(sym.TRUE, createToken(sym.TRUE, yytext(), yyline));
             }
           case 95: break;
           case 44: 
-            { return new Symbol(sym.WHILE, createToken(sym.WHILE, yytext(), yycolumn));
+            { return new Symbol(sym.WHILE, createToken(sym.WHILE, yytext(), yyline));
             }
           case 96: break;
           case 45: 
-            { return new Symbol(sym.LOCAL, createToken(sym.LOCAL, yytext(), yycolumn));
+            { return new Symbol(sym.LOCAL, createToken(sym.LOCAL, yytext(), yyline));
             }
           case 97: break;
           case 46: 
-            { return new Symbol(sym.UNTIL, createToken(sym.UNTIL, yytext(), yycolumn));
+            { return new Symbol(sym.UNTIL, createToken(sym.UNTIL, yytext(), yyline));
             }
           case 98: break;
           case 47: 
-            { return new Symbol(sym.FALSE, createToken(sym.FALSE, yytext(), yycolumn));
+            { return new Symbol(sym.FALSE, createToken(sym.FALSE, yytext(), yyline));
             }
           case 99: break;
           case 48: 
-            { return new Symbol(sym.BREAK, createToken(sym.BREAK, yytext(), yycolumn));
+            { return new Symbol(sym.BREAK, createToken(sym.BREAK, yytext(), yyline));
             }
           case 100: break;
           case 49: 
-            { return new Symbol(sym.ELSEIF, createToken(sym.ELSEIF, yytext(), yycolumn));
+            { return new Symbol(sym.ELSEIF, createToken(sym.ELSEIF, yytext(), yyline));
             }
           case 101: break;
           case 50: 
-            { return new Symbol(sym.REPEAT, createToken(sym.REPEAT, yytext(), yycolumn));
+            { return new Symbol(sym.REPEAT, createToken(sym.REPEAT, yytext(), yyline));
             }
           case 102: break;
           case 51: 
-            { return new Symbol(sym.RETURN, createToken(sym.RETURN, yytext(), yycolumn));
+            { return new Symbol(sym.RETURN, createToken(sym.RETURN, yytext(), yyline));
             }
           case 103: break;
           case 52: 
-            { return new Symbol(sym.FUNCTION, createToken(sym.FUNCTION, yytext(), yycolumn));
+            { return new Symbol(sym.FUNCTION, createToken(sym.FUNCTION, yytext(), yyline));
             }
           case 104: break;
           default:

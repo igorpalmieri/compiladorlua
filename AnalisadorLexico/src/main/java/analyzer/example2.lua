@@ -26,6 +26,6 @@ else
 	x2 = (b - math.sqrt(delta)) / (2*a);
 	text = "There are two real solutions: x1=" .. x1 .. " 
 	       et x2=" .. x2;
-end
+end;
 
-print( text );
+print("2");

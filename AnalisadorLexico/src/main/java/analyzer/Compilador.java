@@ -2,7 +2,6 @@ package analyzer;
 
 import java.io.FileReader;
 import java.nio.file.Paths;
-
 public class Compilador {
 
 	public static void main(String[] args) throws Exception{
