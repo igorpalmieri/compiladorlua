@@ -57,7 +57,7 @@ public class Node {
     public Node(LUAToken token, String result){
     	this.token = token;
     	this.type = "Terminal";
-    	this.code = result;
+    	this.code = "";
     	this.result = result;
     }
     public String print(){

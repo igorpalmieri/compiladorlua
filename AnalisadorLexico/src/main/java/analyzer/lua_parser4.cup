@@ -110,13 +110,38 @@ stat ::=
         | 
          FOR:t1 NAME:t2 ATRIBUICAO:t3 exp:n1 VIRGULA:t4 exp:n2 DO:t5 block:n3 END:t6 
         {: 
-        	Node[] k = {new Node(t1),new Node(t2),new Node(t3),n1,new Node(t4),n2,new Node(t5),n3,new Node(t6)}; 
-        	RESULT = new Node("stat",k); 
+        	String label = SymTable.getLabel();
+        	String label2 = SymTable.getLabel();
+        	
+        	Node var = new Node(t2,SymTable.getVar(t2.value));
+        	Node[] k = {n1,n2,n3}; 
+        	String code = "{0}{1}"+ var.result + " := " + n1.result;
+        	code += "\n"+label+":";
+        	code += "\nif "+ var.result +" > "+ n2.result +" then goto " + label2;
+        	code += "\n{2}";
+        	code += var.result + " := " + var.result + " + 1";
+        	code += "\ngoto "+label+"\n"+label2+":\n";
+        	RESULT = new Node("for",k,code); 
         :}
         | FOR:t1 NAME:t2 ATRIBUICAO:t3 exp:n1 VIRGULA:t4 exp:n2 VIRGULA:t5 exp:n3 DO:t6 block:n4 END:t7 
         {: 
-        	Node[] k = {new Node(t1),new Node(t2),new Node(t3),n1,new Node(t4),n2,new Node(t5),n3,new Node(t6),n4,new Node(t7)}; 
-        	RESULT = new Node("stat",k); 
+        	String label0 = SymTable.getLabel();
+        	String label1 = SymTable.getLabel();
+        	String label2 = SymTable.getLabel();
+        	String label3 = SymTable.getLabel();
+        	
+        	Node var = new Node(t2,SymTable.getVar(t2.value));
+        	Node[] k = {n1,n2,n3,n4}; 
+        	String code = "{0}{1}{2}" + var.result + " := " + n1.result;
+        	code += "\n"+label0+":";
+        	code += "\nif "+ n3.result +" < 0 then goto " + label1;
+        	code += "\nif "+ var.result +" < "+ n2.result +" then goto " + label3;
+        	code += "\ngoto "+label2+"\n"+label1+":";
+        	code += "\nif "+ var.result +" > "+ n2.result +" then goto " + label3;
+        	code += "\n"+label2+":\n{3}";
+        	code += var.result + " := " + var.result + " + " + n3.result;
+        	code += "\ngoto "+label0+"\n"+label3+":\n";
+        	RESULT = new Node("for",k,code); 
         :}
         | FOR:t1 namelist:n1 IN:t2 explist:n2 DO:t3 block:n3 END:t4 
         {: 
@@ -125,14 +150,16 @@ stat ::=
         :}
         | FUNCTION:t1 funcname:n1 funcbody:n2 
         {: 
-        	
+        	String label = SymTable.getLabel();
+        	String code = "goto "+label+"\n{0}:\n{1}"+label+":\n";
         	Node[] k = {n1,n2}; 
-        	RESULT = new Node("stat",k); 
+        	RESULT = new Node("function",k,code,""); 
         :}
         | LOCAL:t1 FUNCTION:t2 NAME:t3 funcbody:n1 
         {: 
-        	Node[] k = {new Node(t1),new Node(t2),new Node(t3),n1};
-        	RESULT = new Node("stat",k); 
+        	String label = SymTable.getLabel();
+        	String code = "goto "+label+"\n"+t3.value+":\n{0}"+label+":\n";
+        	RESULT = new Node("local function",n1,code); 
         :}
         | LOCAL:t1 namelist:n1 
         {: 
@@ -175,18 +202,19 @@ elseif ::= ELSEIF:t1 exp:n1 THEN:t2 block:n2
 	  
 laststat ::= RETURN:t1 explist:n1 
 			{: 
-				Node[] k = {new Node(t1),n1}; 
-				RESULT = new Node("laststat",k); 
+				RESULT = new Node("laststat",n1,"{0}return "+n1.result+"\n");
+				
 			:}
 		   |
 		   	RETURN:t1
 			{: 
-				RESULT = new Node("laststat",new Node(t1),t1.value); 
+				Node n = null;
+				RESULT = new Node("laststat",n,"return");
 			:} 
 		   | BREAK:t1 
 		   {: 
-		   		Node[] k = {new Node(t1)}; 
-		   		RESULT = new Node("laststat",new Node(t1),t1.value); 
+		   		Node n = null;
+		   		RESULT = new Node("laststat",n,"break");
 		   	:};
 
 funcname ::= NAME:t1 
@@ -221,13 +249,15 @@ var ::= NAME:t
 		:} 
       | prefixexp:n1 ACOL:t1 exp:n2 FCOL:t2 
       {: 
-      	Node[] k = {n1,new Node(t1),n2,new Node(t2)}; 
-      	RESULT = new Node("var",k); 
+      	//Node[] k = {n1,new Node(t1),n2,new Node(t2)}; 
+      	//RESULT = new Node("var",k,"","TODO"); 
+      	RESULT = n1;
       :}  
-      | prefixexp:n1 PONTO:t1 NAME:t2 
+      | prefixexp:n1 PONTO:t1 NAME:t
       {: 
-      	Node[] k = {n1,new Node(t1),new Node(t2)}; 
-      	RESULT = new Node("var",k); 
+      	//Node[] k = {n1,new Node(t1),new Node(t2)}; 
+      	//RESULT = new Node("var",k,"","TODO"); 
+      	RESULT = new Node(t,SymTable.getVar(t.value));
       :};
 
 namelist ::= NAME:t
@@ -397,18 +427,21 @@ exp ::= NIL:t1
       :}
       | MENOS:t1 exp:n1  
       {: 
-      	Node[] k = {n1,new Node(t1)}; 
-      	RESULT = new Node("exp",k); 
+      	String tvar = SymTable.getTempVar();
+      	String code = "{0}"+tvar+" := - "+ n1.result + "\n"; 
+      	RESULT = new Node("exp",n1,code,tvar); 
       :}
 	  | NOT:t1 exp:n1  
       {: 
-      	Node[] k = {n1,new Node(t1)}; 
-      	RESULT = new Node("exp",k); 
+      	String tvar = SymTable.getTempVar();
+      	String code = "{0}"+tvar+" := - "+ n1.result + "\n"; 
+      	RESULT = new Node("exp",n1,code,tvar); 
       :}
       | TRALHA:t1 exp:n1  
       {: 
-      	Node[] k = {n1,new Node(t1)}; 
-      	RESULT = new Node("exp",k); 
+      	String tvar = SymTable.getTempVar();
+      	String code = "{0}"+tvar+" := - "+ n1.result + "\n"; 
+      	RESULT = new Node("exp",n1,code,tvar); 
       :};
 		
 prefixexp ::= var:n1 
@@ -421,28 +454,31 @@ prefixexp ::= var:n1
             :}   
             | APAR:t1 exp:n1 FPAR:t2 
             {: 
-            	Node[] k = {new Node(t1),n1,new Node(t2)}; 
-            	RESULT = new Node("prefixexp",k,"{1}"); 
+            	RESULT = n1;
             :};
 
 functioncall ::= prefixexp:n1 args:n2  
 			  {: 
 			  		Node[] k = {n1,n2}; 
-			  		RESULT = new Node("functioncall",k,"Executa functioncall"); 
+			  		RESULT = new Node("functioncall",k,"{1}goto "+n1.token.value+"\n",n1.result); 
 			  :}
                | prefixexp:n1 DPONTOS:t1 NAME:t2 args:n2  
               {: 
-              		Node[] k = {n1,new Node(t1),new Node(t2),n2}; 
-              		RESULT = new Node("functioncall",k,"Executa functioncall"); 
+              		Node n = new Node(t2);
+              		Node[] k = {n1,n,n2}; 
+              		RESULT = new Node("functioncall",k,"{1}goto "+n.result+"\n",n.result); 
               :};
 
 args ::= APAR:t1 explist:n1 FPAR:t2 
 		{: 
-			RESULT = n1;
+			String[] exps = n1.result.split(",");
+			String code = "{0}";
+			for(int i=0;i<exps.length;i++) code += "param"+(i+1)+" := " + exps[i] + "\n";			
+			RESULT = new Node("args",n1,code,"" + exps.length); 
 		:}
 		| APAR:t1 FPAR:t2 
        {: 
-       		Node[] k = {new Node(t1),new Node(t2)}; 
+       		Node[] k = null;
        		RESULT = new Node("args",k); 
        :}  
        | tableconstructor:n1 
@@ -456,20 +492,22 @@ args ::= APAR:t1 explist:n1 FPAR:t2
 
 function ::= FUNCTION:t1 funcbody:n1 
 			{: 
-				Node[] k = {new Node(t1),n1}; 
-				RESULT = new Node("function",k); 
+				RESULT = n1;
 			:};
 
 funcbody ::= APAR:t1 FPAR:t2 block:n2 END:t3 
 			{: 
-				Node[] k = {new Node(t1),new Node(t2),n2,new Node(t3)}; 
-				RESULT = new Node("funcbody",k); 
+				RESULT = n2;
 			:}
 			|
 			APAR:t1 parlist:n1 FPAR:t2 block:n2 END:t3 
 			{: 
-				Node[] k = {new Node(t1),n1,new Node(t2),n2,new Node(t3)}; 
-				RESULT = new Node("funcbody",k); 
+				String[] pars = n1.result.split(",");
+				String code = "{0}";
+				for(int i=0;i<pars.length;i++) code += "param"+(i+1)+" := " + pars[i] + "\n";		
+				code += "{1}";	
+				Node[] k = {n1,n2}; 
+				RESULT = new Node("funcbody",k,code); 
 			:};
 
 
@@ -495,8 +533,7 @@ tableconstructor ::= ACHA:t1 FCHA:t2
 					:} 
 				   | ACHA:t1 fieldlist:n1 FCHA:t2 
 				   {: 
-				   		Node[] k = {new Node(t1),n1,new Node(t2)}; 
-				   		RESULT = new Node("tableconstructor",k); 
+				   		RESULT = n1; 
 				   :};
 
 fieldlist ::= field:n1
@@ -518,10 +555,19 @@ fieldlist2 ::= fieldsep:n1 field:n2 {: Node[] k = {n1,n2}; RESULT = new Node("fi
              | fieldsep:n1 field:n2 fieldlist2:n3 {: Node[] k = {n1,n2,n3}; RESULT = new Node("fieldlist2",k); :}
 			 | fieldsep:n1 field:n2 fieldsep:n3 {: Node[] k = {n1,n2,n3}; RESULT = new Node("fieldlist2",k); :};
 			 
-field ::= ACOL:t1 exp:n1 FCOL:t2 ATRIBUICAO:t3 exp:n2 {: Node[] k = {new Node(t1),n1,new Node(t2),new Node(t3),n2}; RESULT = new Node("field",k); :} 
-        | NAME:t1 ATRIBUICAO:t2 exp:n1 {: Node[] k = {new Node(t1),new Node(t2),n1}; RESULT = new Node("field",k); :}
-        | exp:n1 {: RESULT = new Node("field",n1);  :}  ;
+field ::= ACOL:t1 exp:n1 FCOL:t2 ATRIBUICAO:t3 exp:n2 
+		{: 
+			Node[] k = {new Node(t1),n1,new Node(t2),new Node(t3),n2}; 
+			RESULT = new Node("field",k); 
+		:} 
+        | NAME:t1 ATRIBUICAO:t2 exp:n1 
+        {: 
+        	Node var = new Node(t1,SymTable.getVar(t1.value));
+        	String code = "{0}"+ var.result + " := " + n1.result;
+        	RESULT = new Node("field",n1,code); 
+        :}
+        | exp:n1 {: RESULT = n1;  :}  ;
 
-fieldsep ::= VIRGULA:t1 {: RESULT = new Node("fieldsep",new Node(t1));  :} 
-           | PVIRGULA:t1 {: RESULT = new Node("fieldsep",new Node(t1));  :} ;
+fieldsep ::= VIRGULA:t1 {: Node[] k = null; RESULT = new Node("fieldsep",k);  :} 
+           | PVIRGULA:t1 {: Node[] k = null; RESULT = new Node("fieldsep",k);  :};
 

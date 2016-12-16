@@ -1,39 +1,10 @@
 stat 
-   	FOR:t1 NAME:t2 ATRIBUICAO:t3 exp:n1 VIRGULA:t4 exp:n2 DO:t5 block:n3 END:t6 
-   	FOR:t1 NAME:t2 ATRIBUICAO:t3 exp:n1 VIRGULA:t4 exp:n2 VIRGULA:t5 exp:n3 DO:t6 block:n4 END:t7 
- 	FOR:t1 namelist:n1 IN:t2 explist:n2 DO:t3 block:n3 END:t4 
-   	FUNCTION:t1 funcname:n1 funcbody:n2 
-   	LOCAL:t1 FUNCTION:t2 NAME:t3 funcbody:n1 
-laststat
-	RETURN:t1 explist:n1 
-	RETURN:t1
-	BREAK:t1 		  
+ 	FOR:t1 namelist:n1 IN:t2 explist:n2 DO:t3 block:n3 END:t4   
 funcname
 	NAME:t1 PONTO:t2 funcname:n1 
-	funcname:n1 DPONTOS:t2 NAME:t3 
-var 
-	prefixexp:n1 ACOL:t1 exp:n2 FCOL:t2 
-    prefixexp:n1 PONTO:t1 NAME:t2 
-exp 
-    MENOS:t1 exp:n1  
-    NOT:t1 exp:n1  
-    TRALHA:t1 exp:n1  
-prefixexp
-    APAR:t1 exp:n1 FPAR:t2   
-functioncall	
-	prefixexp:n1 args:n2  
-	prefixexp:n1 DPONTOS:t1 NAME:t2 args:n2              
-args	
-	APAR:t1 FPAR:t2      
-function 
-	FUNCTION:t1 funcbody:n1 			
-funcbody 
-	APAR:t1 FPAR:t2 block:n2 END:t3 
-	APAR:t1 parlist:n1 FPAR:t2 block:n2 END:t3 		
+	funcname:n1 DPONTOS:t2 NAME:t3 		
 parlist 
-    PONTOS3:t1 		  
-tableconstructor
-	ACHA:t1 fieldlist:n1 FCHA:t2 				   
+    PONTOS3:t1 		  		   
 fieldlist
 	field:n1 fieldlist2:n2 
 	field:n1 fieldlist2:n2 fieldsep:n3           
@@ -42,8 +13,3 @@ fieldlist2
     fieldsep:n1 field:n2 fieldlist2:n3 
 field
 	ACOL:t1 exp:n1 FCOL:t2 ATRIBUICAO:t3 exp:n2 
-    NAME:t1 ATRIBUICAO:t2 exp:n1
-    exp:n1 
-fieldsep
-	VIRGULA:t1 
-    PVIRGULA:t1
